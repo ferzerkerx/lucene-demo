@@ -2,23 +2,17 @@ package com.ferzerkerx.lucenedemo.repository;
 
 import com.ferzerkerx.lucenedemo.model.Book;
 import com.ferzerkerx.lucenedemo.model.BookQuery;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.*;
 import org.apache.lucene.search.*;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.RAMDirectory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Arrays;
-import java.util.List;
 import java.util.stream.Stream;
 
 import static com.ferzerkerx.lucenedemo.Utils.closeQuietly;
@@ -38,7 +32,7 @@ public class LuceneBookRepository implements BookRepository, AutoCloseable {
     public void init() {
         directory = new RAMDirectory();
 
-        IndexCreator.writeToIndex(directory);
+        FakeIndexCreator.writeToIndex(directory);
 
         prepareIndexReader();
         isReady = true;
@@ -56,6 +50,10 @@ public class LuceneBookRepository implements BookRepository, AutoCloseable {
             } catch (Exception e) {
                 closeQuietly(indexReader);
                 closeQuietly(directory);
+            }
+            finally {
+                indexReader = null;
+                searcher = null;
             }
         }
     }
@@ -94,13 +92,15 @@ public class LuceneBookRepository implements BookRepository, AutoCloseable {
         try {
             TopDocs topDocs = searcher.search(query, MAX_NUM_RESULTS);
             return Arrays.stream(topDocs.scoreDocs)
-                    .map(topDoc -> {
-                        try {
-                            return searcher.doc(topDoc.doc);
-                        } catch (IOException e) {
-                            throw new UncheckedIOException(e);
-                        }
-                    });
+                    .map(this::toDocument);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    private Document toDocument(ScoreDoc topDoc) {
+        try {
+            return searcher.doc(topDoc.doc);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -110,44 +110,7 @@ public class LuceneBookRepository implements BookRepository, AutoCloseable {
     public void close() throws Exception {
         closeQuietly(indexReader);
         closeQuietly(directory);
-    }
-
-    static class IndexCreator {
-
-        private final static Logger LOG = LoggerFactory.getLogger(IndexCreator.class);
-
-        private static void writeToIndex(Directory directory) {
-            LOG.info("Started writing to index.");
-            IndexWriterConfig indexWriterConfig = new IndexWriterConfig(new StandardAnalyzer());
-            try (IndexWriter indexWriter = new IndexWriter(directory, indexWriterConfig)) {
-
-                for (Document document : createFakeDocuments()) {
-                    indexWriter.addDocument(document);
-                }
-
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-            LOG.info("Finished writing to index.");
-        }
-
-
-        private static List<Document> createFakeDocuments() {
-            return Arrays.asList(
-                    createDocument("Game of thrones"),
-                    createDocument("Norwegian wood"),
-                    createDocument("1Q84")
-            );
-        }
-
-
-        private static Document createDocument(String bookName) {
-            StringField stringField = new StringField("name", bookName, Field.Store.YES);
-            Document document = new Document();
-            document.add(stringField);
-            return document;
-        }
-
-
+        indexReader = null;
+        directory =  null;
     }
 }
