@@ -5,17 +5,16 @@ import com.ferzerkerx.lucenedemo.service.BookService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import javax.annotation.Nonnull;
 import java.util.List;
 
 @RestController
 public class BookController {
 
-    @Nonnull
+
     private final BookService bookService;
 
     @Autowired
-    public BookController(@Nonnull BookService bookService) {
+    public BookController(BookService bookService) {
         this.bookService = bookService;
     }
 

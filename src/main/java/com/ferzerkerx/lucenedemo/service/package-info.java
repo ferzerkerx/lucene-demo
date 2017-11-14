@@ -1,0 +1,4 @@
+@ParametersAreNonnullByDefault
+package com.ferzerkerx.lucenedemo.service;
+
+import javax.annotation.ParametersAreNonnullByDefault;

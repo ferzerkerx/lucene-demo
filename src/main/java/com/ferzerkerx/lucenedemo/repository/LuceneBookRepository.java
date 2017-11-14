@@ -14,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
-import javax.annotation.Nonnull;
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -61,9 +60,9 @@ public class LuceneBookRepository implements BookRepository, AutoCloseable {
         }
     }
 
-    @Nonnull
+
     @Override
-    public Stream<? extends Book> findBy(@Nonnull BookQuery bookQuery) {
+    public Stream<? extends Book> findBy(BookQuery bookQuery) {
         if (!isReady) {
             throw new IllegalStateException("Lucene is not ready.");
         }
@@ -75,23 +74,23 @@ public class LuceneBookRepository implements BookRepository, AutoCloseable {
 
     }
 
-    @Nonnull
-    private Query createLuceneQuery(@Nonnull BookQuery bookQuery) {
+
+    private Query createLuceneQuery(BookQuery bookQuery) {
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
         Term term = new Term("name", bookQuery.getName());
         builder.add(new BooleanClause(new PrefixQuery(term), BooleanClause.Occur.SHOULD));
         return builder.build();
     }
 
-    @Nonnull
-    private Book toBook(@Nonnull Document document) {
+
+    private Book toBook(Document document) {
         return Book.builder()
                 .withName(document.get("name"))
                 .createBook();
     }
 
-    @Nonnull
-    private Stream<Document> findDocuments(@Nonnull Query query) {
+
+    private Stream<Document> findDocuments(Query query) {
         try {
             TopDocs topDocs = searcher.search(query, MAX_NUM_RESULTS);
             return Arrays.stream(topDocs.scoreDocs)
@@ -117,7 +116,7 @@ public class LuceneBookRepository implements BookRepository, AutoCloseable {
 
         private final static Logger LOG = LoggerFactory.getLogger(IndexCreator.class);
 
-        private static void writeToIndex(@Nonnull Directory directory) {
+        private static void writeToIndex(Directory directory) {
             LOG.info("Started writing to index.");
             IndexWriterConfig indexWriterConfig = new IndexWriterConfig(new StandardAnalyzer());
             try (IndexWriter indexWriter = new IndexWriter(directory, indexWriterConfig)) {
@@ -132,7 +131,7 @@ public class LuceneBookRepository implements BookRepository, AutoCloseable {
             LOG.info("Finished writing to index.");
         }
 
-        @Nonnull
+
         private static List<Document> createFakeDocuments() {
             return Arrays.asList(
                     createDocument("Game of thrones"),
@@ -141,8 +140,8 @@ public class LuceneBookRepository implements BookRepository, AutoCloseable {
             );
         }
 
-        @Nonnull
-        private static Document createDocument(@Nonnull String bookName) {
+
+        private static Document createDocument(String bookName) {
             StringField stringField = new StringField("name", bookName, Field.Store.YES);
             Document document = new Document();
             document.add(stringField);
