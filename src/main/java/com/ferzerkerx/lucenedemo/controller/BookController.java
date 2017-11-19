@@ -18,6 +18,7 @@ public class BookController {
         this.bookService = bookService;
     }
 
+    @CrossOrigin
     @RequestMapping(value = "/books", method = RequestMethod.GET)
     @ResponseBody
     public List<Book> findBookByKeyword(@RequestParam(name = "keyword") String keyword) {
