@@ -25,7 +25,8 @@ public class BookServiceImpl implements BookService {
     @Override
     public List<Book> findBookByKeyword(String name) {
         BookQuery bookQuery = BookQuery.builder()
-                .withName(name)
+                .withTitle(name)
+                .withAuthorName(name)
                 .build();
 
         try (Stream<? extends Book> books = bookRepository.findBy(bookQuery)) {

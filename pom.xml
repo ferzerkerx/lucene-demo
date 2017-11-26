@@ -8,7 +8,7 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>lucene-demo</name>
+    <title>lucene-demo</title>
     <description></description>
 
     <parent>
@@ -54,6 +54,11 @@
             <version>2.6</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.opencsv</groupId>
+            <artifactId>opencsv</artifactId>
+            <version>4.0</version>
+        </dependency>
 
     </dependencies>
 
