@@ -1,6 +1,5 @@
 package com.ferzerkerx.lucenedemo.repository;
 
-import com.ferzerkerx.lucenedemo.csv.CsvBookSupplier;
 import com.ferzerkerx.lucenedemo.model.Book;
 import com.ferzerkerx.lucenedemo.model.BookQuery;
 import org.apache.lucene.document.Document;
@@ -9,18 +8,12 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.*;
 import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.RAMDirectory;
 import org.springframework.stereotype.Repository;
 
-import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Arrays;
-import java.util.Spliterator;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import static com.ferzerkerx.lucenedemo.Utils.closeQuietly;
 
@@ -32,68 +25,19 @@ public class LuceneBookRepository implements BookRepository, AutoCloseable {
 
     private IndexSearcher searcher;
     private IndexReader indexReader;
-    private Directory directory;
-    private boolean isReady;
+    private final boolean isReady;
 
-    @PostConstruct
-    public void init() throws Exception {
-        directory = new RAMDirectory();
-
-        try (CsvBookSupplier bookSupplier = new CsvBookSupplier()) {
-            try (Stream<Book> bookStream = generate(bookSupplier)) {
-                BookIndexCreator.create(directory, bookStream);
-            }
-        }
-
-        prepareIndexReader();
-    }
-
-    private Stream<Book> generate(Supplier<Book> bookSupplier) {
-        return StreamSupport.stream(new Spliterator<Book>() {
-            @Override
-            public boolean tryAdvance(Consumer<? super Book> action) {
-                Book book = bookSupplier.get();
-                if (book != null) {
-                    action.accept(book);
-                    return true;
-                }
-                return false;
-            }
-
-            @Override
-            public Spliterator<Book> trySplit() {
-                return null;
-            }
-
-            @Override
-            public long estimateSize() {
-                return 0;
-            }
-
-            @Override
-            public int characteristics() {
-                return 0;
-            }
-        }, false);
-    }
-
-    private void prepareIndexReader() {
+    public LuceneBookRepository(Directory directory) throws IOException {
+        indexReader = DirectoryReader.open(directory);
         try {
-            indexReader = DirectoryReader.open(directory);
-        } catch (IOException e) {
-            closeQuietly(directory);
+            searcher = new IndexSearcher(indexReader);
+        } catch (Exception e) {
+            closeQuietly(indexReader);
+            indexReader = null;
+            searcher = null;
+            throw e;
         }
-        if (indexReader != null) {
-            try {
-                searcher = new IndexSearcher(indexReader);
-                isReady = true;
-            } catch (Exception e) {
-                closeQuietly(indexReader);
-                closeQuietly(directory);
-                indexReader = null;
-                searcher = null;
-            }
-        }
+        isReady = true;
     }
 
 
@@ -163,8 +107,7 @@ public class LuceneBookRepository implements BookRepository, AutoCloseable {
     @Override
     public void close() throws Exception {
         closeQuietly(indexReader);
-        closeQuietly(directory);
         indexReader = null;
-        directory =  null;
+        searcher = null;
     }
 }
