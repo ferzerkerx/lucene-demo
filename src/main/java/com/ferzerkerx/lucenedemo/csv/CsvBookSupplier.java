@@ -13,19 +13,16 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-import static com.ferzerkerx.lucenedemo.Utils.closeQuietly;
-import static com.ferzerkerx.lucenedemo.Utils.resolvePath;
+import static com.ferzerkerx.lucenedemo.utils.FileUtils.closeQuietly;
 
 public class CsvBookSupplier implements Supplier<Book>, AutoCloseable {
     private static final int TITLE_COLUMN_INDEX = 0;
     private static final int AUTHOR_COLUMN_INDEX = 1;
-    private static final String BOOKS_CSV = "books.csv";
 
     private final FileReader fileReader;
     private final CSVReader csvReader;
 
-    public CsvBookSupplier() throws IOException {
-        Path pathToFile = resolvePath(CsvBookSupplier.class, BOOKS_CSV);
+    public CsvBookSupplier(Path pathToFile) throws IOException {
         try {
             fileReader = new FileReader(pathToFile.toFile());
         } catch (FileNotFoundException e) {
@@ -61,7 +58,7 @@ public class CsvBookSupplier implements Supplier<Book>, AutoCloseable {
     }
 
     @Override
-        public void close() throws Exception {
+        public void close() {
             closeQuietly(csvReader);
             closeQuietly(fileReader);
         }

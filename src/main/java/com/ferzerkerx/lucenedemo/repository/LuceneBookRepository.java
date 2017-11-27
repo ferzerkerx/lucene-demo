@@ -15,7 +15,7 @@ import java.io.UncheckedIOException;
 import java.util.Arrays;
 import java.util.stream.Stream;
 
-import static com.ferzerkerx.lucenedemo.Utils.closeQuietly;
+import static com.ferzerkerx.lucenedemo.utils.FileUtils.closeQuietly;
 
 
 @Repository

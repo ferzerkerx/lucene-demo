@@ -1,4 +1,4 @@
-package com.ferzerkerx.lucenedemo;
+package com.ferzerkerx.lucenedemo.utils;
 
 import javax.annotation.Nullable;
 import java.io.Closeable;
@@ -9,11 +9,10 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
 
-public final class Utils {
+public final class FileUtils {
 
-    private Utils() {
+    private FileUtils() {
 
     }
 
@@ -23,7 +22,6 @@ public final class Utils {
                 closeable.close();
             }
         } catch (IOException ignored) {
-
         }
     }
 
@@ -31,12 +29,8 @@ public final class Utils {
         URL resourceUrl = clazz.getResource(fileName);
         try {
             return Paths.get(resourceUrl.toURI());
-        } catch (URISyntaxException e) {
+        } catch (URISyntaxException ignored) {
             throw new UncheckedIOException(new FileNotFoundException("Could not find file:"  + fileName));
         }
-    }
-
-    public static String getOrThrow(Optional<String> optional, String name) {
-        return optional.orElseThrow(() -> new IllegalArgumentException(name + " is needed."));
     }
 }

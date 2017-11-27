@@ -4,7 +4,7 @@ import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 import java.util.Optional;
 
-import static com.ferzerkerx.lucenedemo.Utils.getOrThrow;
+import static com.ferzerkerx.lucenedemo.utils.OptionalUtils.getOrThrow;
 
 @Immutable
 public class BookQuery {
