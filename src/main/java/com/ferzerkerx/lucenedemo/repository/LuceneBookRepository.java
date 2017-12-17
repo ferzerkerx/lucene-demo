@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Arrays;
 import java.util.stream.Stream;
+import java.util.Optional;
 
 import static com.ferzerkerx.lucenedemo.utils.FileUtils.closeQuietly;
 
@@ -57,11 +58,14 @@ public class LuceneBookRepository implements BookRepository, AutoCloseable {
     private Query createLuceneQuery(BookQuery bookQuery) {
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
 
-        if (bookQuery.getAuthor().isPresent()) {
-            builder.add(createBooleanClause("author", bookQuery.getAuthor().get()));
+        Optional<String> optionalAuthor = bookQuery.getAuthor();
+        if (optionalAuthor.isPresent()) {
+            builder.add(createBooleanClause("author", optionalAuthor.get()));
         }
-        if (bookQuery.getTitle().isPresent()) {
-            builder.add(createBooleanClause("title", bookQuery.getTitle().get()));
+
+        Optional<String> optionalTitle = bookQuery.getTitle();
+        if (optionalTitle.isPresent()) {
+            builder.add(createBooleanClause("title", optionalTitle.get()));
         }
 
         return builder.build();
