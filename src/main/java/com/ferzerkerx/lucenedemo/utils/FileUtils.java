@@ -16,6 +16,7 @@ public final class FileUtils {
 
     }
 
+    @SuppressWarnings("all")
     public static void closeQuietly(@Nullable Closeable closeable) {
         try {
             if (closeable != null) {

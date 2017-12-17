@@ -43,7 +43,7 @@ public class LuceneBookRepository implements BookRepository, AutoCloseable {
 
 
     @Override
-    public Stream<? extends Book> findBy(BookQuery bookQuery) {
+    public Stream<Book> findBy(BookQuery bookQuery) {
         if (!isReady) {
             throw new IllegalStateException("Lucene is not ready.");
         }

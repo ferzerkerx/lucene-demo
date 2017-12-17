@@ -7,5 +7,5 @@ import java.util.stream.Stream;
 
 public interface BookRepository {
 
-    Stream<? extends Book> findBy(BookQuery bookQuery);
+    Stream<Book> findBy(BookQuery bookQuery);
 }
