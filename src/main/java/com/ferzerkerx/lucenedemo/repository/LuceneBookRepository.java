@@ -2,10 +2,10 @@ package com.ferzerkerx.lucenedemo.repository;
 
 import com.ferzerkerx.lucenedemo.model.Book;
 import com.ferzerkerx.lucenedemo.model.BookQuery;
+import com.ferzerkerx.lucenedemo.utils.LuceneBookIndexUtils;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.search.*;
 import org.apache.lucene.store.Directory;
 import org.springframework.stereotype.Repository;
@@ -14,9 +14,10 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Arrays;
 import java.util.stream.Stream;
-import java.util.Optional;
 
 import static com.ferzerkerx.lucenedemo.utils.FileUtils.closeQuietly;
+import static com.ferzerkerx.lucenedemo.utils.LuceneBookIndexUtils.createPrefixQuery;
+import static java.util.Objects.requireNonNull;
 
 
 @Repository
@@ -29,6 +30,7 @@ public class LuceneBookRepository implements BookRepository, AutoCloseable {
     private final boolean isReady;
 
     public LuceneBookRepository(Directory directory) throws IOException {
+        requireNonNull(directory);
         indexReader = DirectoryReader.open(directory);
         try {
             searcher = new IndexSearcher(indexReader);
@@ -41,9 +43,9 @@ public class LuceneBookRepository implements BookRepository, AutoCloseable {
         isReady = true;
     }
 
-
     @Override
     public Stream<Book> findBy(BookQuery bookQuery) {
+        requireNonNull(bookQuery);
         if (!isReady) {
             throw new IllegalStateException("Lucene is not ready.");
         }
@@ -51,44 +53,32 @@ public class LuceneBookRepository implements BookRepository, AutoCloseable {
         Query query = createLuceneQuery(bookQuery);
 
         return findDocuments(query)
-                .map(this::toBook);
+                .map(LuceneBookIndexUtils::toBook);
+    }
 
+    @Override
+    public void close() {
+        closeQuietly(indexReader);
+        indexReader = null;
+        searcher = null;
     }
 
     private Query createLuceneQuery(BookQuery bookQuery) {
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
 
-        Optional<String> optionalAuthor = bookQuery.getAuthor();
-        if (optionalAuthor.isPresent()) {
-            builder.add(createBooleanClause("author", optionalAuthor.get()));
-        }
+        bookQuery.getAuthor()
+                .ifPresent(author -> builder.add(createBooleanClause("author", author)));
 
-        Optional<String> optionalTitle = bookQuery.getTitle();
-        if (optionalTitle.isPresent()) {
-            builder.add(createBooleanClause("title", optionalTitle.get()));
-        }
+        bookQuery.getTitle()
+                .ifPresent(title -> builder.add(createBooleanClause("title", title)));
 
         return builder.build();
     }
 
-    private BooleanClause createBooleanClause(String fieldName, String fieldValue) {
-        PrefixQuery authorPrefix = createPrefixQuery(fieldName, fieldValue);
-        return new BooleanClause(authorPrefix, BooleanClause.Occur.SHOULD);
+    private static BooleanClause createBooleanClause(String fieldName, String fieldValue) {
+        PrefixQuery prefixQuery = createPrefixQuery(fieldName, fieldValue);
+        return new BooleanClause(prefixQuery, BooleanClause.Occur.SHOULD);
     }
-
-    private PrefixQuery createPrefixQuery(String fieldName, String termValue) {
-        Term term = new Term(fieldName, termValue);
-        return new PrefixQuery(term);
-    }
-
-
-    private Book toBook(Document document) {
-        return Book.builder()
-                .withTitle(document.get("title"))
-                .withAuthor(document.get("author"))
-                .createBook();
-    }
-
 
     private Stream<Document> findDocuments(Query query) {
         try {
@@ -106,12 +96,5 @@ public class LuceneBookRepository implements BookRepository, AutoCloseable {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-    }
-
-    @Override
-    public void close() throws Exception {
-        closeQuietly(indexReader);
-        indexReader = null;
-        searcher = null;
     }
 }

@@ -1,38 +1,43 @@
-package com.ferzerkerx.lucenedemo.service;
+package com.ferzerkerx.lucenedemo.utils;
 
+import com.ferzerkerx.lucenedemo.csv.CsvBookSupplier;
 import com.ferzerkerx.lucenedemo.model.Book;
-import com.ferzerkerx.lucenedemo.utils.NullTerminatedSpliterator;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.store.Directory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
-public class BookIndexCreator {
+import static java.util.Objects.requireNonNull;
 
-    private static final Logger LOG = LoggerFactory.getLogger(BookIndexCreator.class);
+public final class LuceneBookIndexUtils {
 
-    private BookIndexCreator() {
+    private static final Logger LOG = LoggerFactory.getLogger(LuceneBookIndexUtils.class);
+
+    private LuceneBookIndexUtils() {
+        throw new AssertionError();
     }
 
-    public static void create(Directory directory, Supplier<Book> bookSupplier) {
-        try (Stream<Book> bookStream = generate(bookSupplier)) {
+    public static void createIndex(Directory directory, CsvBookSupplier csvBookSupplier) {
+        requireNonNull(directory);
+        requireNonNull(csvBookSupplier);
+        try (Stream<Book> bookStream = csvBookSupplier.stream()) {
             LOG.info("Started writing to index.");
             IndexWriterConfig indexWriterConfig = new IndexWriterConfig(new StandardAnalyzer());
 
             try (IndexWriter indexWriter = new IndexWriter(directory, indexWriterConfig)) {
                 bookStream
-                        .map(BookIndexCreator::toDocument)
+                        .map(LuceneBookIndexUtils::toDocument)
                         .forEach(document -> writeToIndex(indexWriter, document));
             }
 
@@ -40,10 +45,6 @@ public class BookIndexCreator {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-    }
-
-    private static Stream<Book> generate(Supplier<Book> bookSupplier) {
-        return StreamSupport.stream(new NullTerminatedSpliterator<>(bookSupplier), false);
     }
 
     private static void writeToIndex(IndexWriter indexWriter, Document document) {
@@ -62,5 +63,20 @@ public class BookIndexCreator {
         document.add(titleField);
         document.add(authorField);
         return document;
+    }
+
+    public static PrefixQuery createPrefixQuery(String fieldName, String termValue) {
+        requireNonNull(fieldName);
+        requireNonNull(termValue);
+        Term term = new Term(fieldName, termValue);
+        return new PrefixQuery(term);
+    }
+
+    public static Book toBook(Document document) {
+        requireNonNull(document);
+        return Book.builder()
+                .withTitle(document.get("title"))
+                .withAuthor(document.get("author"))
+                .createBook();
     }
 }

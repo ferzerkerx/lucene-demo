@@ -9,20 +9,21 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import static com.ferzerkerx.lucenedemo.utils.FileUtils.closeQuietly;
+import static java.util.Objects.requireNonNull;
 
 public class CsvBookSupplier implements Supplier<Book>, AutoCloseable {
-    private static final int TITLE_COLUMN_INDEX = 0;
-    private static final int AUTHOR_COLUMN_INDEX = 1;
 
     private final FileReader fileReader;
-    private final CSVReader csvReader;
 
-    public CsvBookSupplier(Path pathToFile) throws IOException {
+    private final CSVReader csvReader;
+    public CsvBookSupplier(Path pathToFile) {
+        requireNonNull(pathToFile);
         try {
             fileReader = new FileReader(pathToFile.toFile());
         } catch (FileNotFoundException e) {
@@ -31,14 +32,8 @@ public class CsvBookSupplier implements Supplier<Book>, AutoCloseable {
         csvReader = new CSVReader(fileReader);
     }
 
-    private static Book toBook(String[] line) {
-        Objects.requireNonNull(line);
-        String title = line[TITLE_COLUMN_INDEX];
-        String author = line[AUTHOR_COLUMN_INDEX];
-        return Book.builder()
-                .withTitle(title)
-                .withAuthor(author)
-                .createBook();
+    public Stream<Book> stream() {
+        return StreamSupport.stream(new NullTerminatedSpliterator<>(this), false);
     }
 
     @Override
@@ -49,6 +44,22 @@ public class CsvBookSupplier implements Supplier<Book>, AutoCloseable {
                 .orElse(null);
     }
 
+    @Override
+    public void close() {
+        closeQuietly(csvReader);
+        closeQuietly(fileReader);
+    }
+
+    private static Book toBook(String[] line) {
+        requireNonNull(line);
+        String title = line[Columns.TITLE.getIndex()];
+        String author = line[Columns.AUTHOR.getIndex()];
+        return Book.builder()
+                .withTitle(title)
+                .withAuthor(author)
+                .createBook();
+    }
+
     private Optional<String[]> readNextLine() {
         try {
             return Optional.ofNullable(csvReader.readNext());
@@ -57,10 +68,17 @@ public class CsvBookSupplier implements Supplier<Book>, AutoCloseable {
         }
     }
 
-    @Override
-        public void close() {
-            closeQuietly(csvReader);
-            closeQuietly(fileReader);
+    private enum Columns {
+        TITLE(0), AUTHOR(1);
+        private final int index;
+
+        Columns(int index) {
+            this.index = index;
         }
 
+        public int getIndex() {
+            return index;
+        }
+    }
 }
+

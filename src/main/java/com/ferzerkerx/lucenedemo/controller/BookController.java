@@ -10,7 +10,6 @@ import java.util.List;
 @RestController
 public class BookController {
 
-
     private final BookService bookService;
 
     @Autowired
@@ -19,7 +18,7 @@ public class BookController {
     }
 
     @CrossOrigin
-    @RequestMapping(value = "/books", method = RequestMethod.GET)
+    @GetMapping(value = "/books")
     @ResponseBody
     public List<Book> findBookByKeyword(@RequestParam(name = "keyword") String keyword) {
         return bookService.findBookByKeyword(keyword);

@@ -4,10 +4,10 @@ import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 import java.util.Optional;
 
-import static com.ferzerkerx.lucenedemo.utils.OptionalUtils.getOrThrow;
+import static java.util.Objects.requireNonNull;
 
 @Immutable
-public class BookQuery {
+public final class BookQuery {
 
     @Nullable
     private final String author;
@@ -34,23 +34,23 @@ public class BookQuery {
 
     public static class Builder {
 
-        private Optional<String> title = Optional.empty();
-        private Optional<String> author = Optional.empty();
+        private String title;
+        private String author;
 
         public Builder withTitle(String title) {
-            this.title = Optional.of(title);
+            requireNonNull(title);
+            this.title = title;
             return this;
         }
 
         public Builder withAuthorName(String authorName) {
-            this.author = Optional.of(authorName);
+            requireNonNull(authorName);
+            this.author = authorName;
             return this;
         }
 
         public BookQuery build() {
-            String bookTitle = getOrThrow(title, "Title");
-            String authorName = getOrThrow(author, "Author");
-            return new BookQuery(authorName, bookTitle);
+            return new BookQuery(author, title);
         }
     }
 }

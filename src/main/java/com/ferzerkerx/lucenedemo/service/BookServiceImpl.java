@@ -10,9 +10,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.util.Objects.requireNonNull;
+
 @Service
 public class BookServiceImpl implements BookService {
-
 
     private final BookRepository bookRepository;
 
@@ -24,6 +25,7 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public List<Book> findBookByKeyword(String name) {
+        requireNonNull(name);
         BookQuery bookQuery = BookQuery.builder()
                 .withTitle(name)
                 .withAuthorName(name)
