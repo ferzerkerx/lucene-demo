@@ -1,6 +1,6 @@
 package com.ferzerkerx.lucenedemo;
 
-import com.ferzerkerx.lucenedemo.config.CreateIndexConfiguration;
+import com.ferzerkerx.lucenedemo.config.CreateIndexConfig;
 import com.ferzerkerx.lucenedemo.csv.CsvBookSupplier;
 import org.apache.lucene.store.Directory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +14,7 @@ import static com.ferzerkerx.lucenedemo.utils.FileUtils.resolvePath;
 import static com.ferzerkerx.lucenedemo.utils.LuceneBookIndexUtils.createIndex;
 
 @SpringBootApplication
-@Import({CreateIndexConfiguration.class})
+@Import({CreateIndexConfig.class})
 public class LuceneDemoApplication {
 
     private static final String BOOKS_CSV = "books.csv";
