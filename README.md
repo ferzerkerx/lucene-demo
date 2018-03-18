@@ -4,4 +4,5 @@
 [![Quality Gate](https://sonarcloud.io/api/badges/gate?key=com.ferzerkerx%3Alucene-demo)](https://sonarcloud.io/dashboard/index/com.ferzerkerx%3Alucene-demo)
 
  - Simple usage of a lucene index to search all time books listed here: https://www.goodreads.com/list/show/2681.Time_Magazine_s_All_Time_100_Novels
- - endpoint usage: http://<server>:<port>/books?keyword="[bookTitle|authorName]"
+ - Endpoint usage: http://<server>:<port>/books?keyword="[bookTitle|authorName]"
+ - Try it on http://localhost:8080/swagger-ui.html
